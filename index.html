@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>COPENHELL Rookie Crawl 2026</title>
+
+    <style>
+      :root {
+        --primary: #ff3c00;
+        --primary-dark: #cc3000;
+        --background: #0d0d0d;
+        --surface: #1b1b1b;
+        --surface-variant: #252525;
+        --text-primary: #ffffff;
+        --text-secondary: #b0b0b0;
+        --border: #333;
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        background: var(--background);
+        color: var(--text-primary);
+        line-height: 1.6;
+      }
+
+      .header {
+        background: var(--surface);
+        border-bottom: 4px solid var(--primary);
+        padding: 2rem 1rem;
+        text-align: center;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 2rem;
+        color: var(--primary);
+      }
+
+      .subtitle {
+        margin: 0.5rem 0 0;
+        color: var(--text-secondary);
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 1rem;
+      }
+
+      #score-display {
+        background: var(--surface);
+        border-left: 4px solid var(--primary);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+      }
+
+      .score-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      #rank {
+        display: block;
+        margin-top: 0.5rem;
+        font-size: 1.2rem;
+      }
+
+      .progress-bar {
+        height: 8px;
+        background: var(--border);
+        border-radius: 4px;
+        margin-top: 1rem;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: var(--primary);
+        transition: width 0.3s;
+      }
+
+      .category {
+        margin-bottom: 1.5rem;
+      }
+
+      .category h3 {
+        margin: 0 0 0.75rem;
+        color: var(--primary);
+        font-size: 1.1rem;
+      }
+
+      .challenge {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: var(--surface);
+        border-left: 3px solid var(--primary);
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+      }
+
+      .challenge:hover { background: var(--surface-variant); }
+
+      .challenge.checked {
+        opacity: 0.5;
+        text-decoration: line-through;
+      }
+
+      input[type="checkbox"] {
+        width: 1.2em;
+        height: 1.2em;
+        accent-color: var(--primary);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <h1>🤘 COPENHELL Rookie Crawl 2026</h1>
+      <p class="subtitle">Onsdag 24. juni 2026</p>
+    </header>
+
+    <div class="container">
+      <div id="score-display">
+        <div class="score-number"><span id="score">0</span> / <span id="total">0</span></div>
+        <span id="rank">🍺 Festival Rookie</span>
+        <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+      </div>
+      <div id="challenges"></div>
+    </div>
+
+    <script>
+      const challenges = [
+        {
+          category: "🍺 Drikke-challenges",
+          items: [
+            "Drik en øl ved 3 forskellige barer",
+            "Få en fremmed til at vælge din næste øl",
+            "Skål med 5 forskellige mennesker",
+            "Prøv en øl du aldrig har smagt før",
+            "Køb en øl til en ven"
+          ]
+        },
+        {
+          category: "🎵 Musik-challenges",
+          items: [
+            "Se et band du aldrig har hørt om",
+            "Bliv til mindst 3 sange ved et band du ikke kendte",
+            "Se koncert fra to forskellige scener",
+            "Få en ny favorit-sang",
+            "Få en bandanbefaling fra en fremmed"
+          ]
+        },
+        {
+          category: "📸 Foto-challenges",
+          items: [
+            "Tag en selfie med gruppen",
+            "Tag et billede af dagens vildeste outfit",
+            "Tag et billede med havnen i baggrunden",
+            "Få et billede med en nonne"
+          ]
+        },
+        {
+          category: "🎪 Festival-challenges",
+          items: [
+            "Smag noget mad ingen af jer har prøvet før",
+            "Besøg alle hovedscener",
+            "Find det mærkeligste merch-produkt",
+            "Hjælp en fremmed med at tage et billede",
+            "Lær navnet på en person I møder",
+            "Saml 10 stykker affald op",
+            "Få fingrene i en setliste"
+          ]
+        },
+        {
+          category: "😂 Fjollede challenges",
+          items: [
+            "Lav luftguitar sammen",
+            "Få hele gruppen til at hoppe samtidig under en koncert",
+            "Få en fremmed med på et gruppefoto",
+            "Find en person der er kommet længere væk fra hjemmet end jer",
+            "Start en fælles SKÅL! med fremmede",
+            "Deltag i en moshpit",
+            "Få en fremmed til at høre om en Tobias Rahim-koncert du engang har været til"
+          ]
+        }
+      ];
+
+      // ponytail: flatten to simple id-based list, localStorage per item
+      const flat = challenges.flatMap((cat, ci) =>
+        cat.items.map((text, i) => ({ id: `c${ci}-${i}`, text, cat: cat.category }))
+      );
+      const total = flat.length;
+
+      const lsKey = id => `ch-${id}`;
+      const isChecked = id => localStorage.getItem(lsKey(id)) === "1";
+      const setChecked = (id, v) => localStorage.setItem(lsKey(id), v ? "1" : "0");
+
+      function getRank(score) {
+        if (score >= 21) return "👑 COPENHELL Legend";
+        if (score >= 16) return "⚡ Mosh Commander";
+        if (score >= 11) return "🔥 Hell Walker";
+        if (score >= 6) return "🤘 Pit Explorer";
+        return "🍺 Festival Rookie";
+      }
+
+      function updateScore() {
+        const score = flat.filter(c => isChecked(c.id)).length;
+        document.getElementById("score").textContent = score;
+        document.getElementById("rank").textContent = getRank(score);
+        document.getElementById("progress").style.width = `${(score / total) * 100}%`;
+      }
+
+      document.getElementById("total").textContent = total;
+      const container = document.getElementById("challenges");
+
+      challenges.forEach((cat, ci) => {
+        const section = document.createElement("div");
+        section.className = "category";
+        section.innerHTML = `<h3>${cat.category}</h3>`;
+        cat.items.forEach((text, i) => {
+          const id = `c${ci}-${i}`;
+          const div = document.createElement("div");
+          div.className = "challenge" + (isChecked(id) ? " checked" : "");
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = isChecked(id);
+          cb.onchange = () => {
+            setChecked(id, cb.checked);
+            div.classList.toggle("checked", cb.checked);
+            updateScore();
+          };
+          div.appendChild(cb);
+          div.appendChild(document.createTextNode(text));
+          section.appendChild(div);
+        });
+        container.appendChild(section);
+      });
+
+      updateScore();
+    </script>
+  </body>
+</html>
